@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sadari Jafung - Bezzeting Pegawai</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome CDN untuk ikon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-100 font-sans text-gray-800">
+
+    <!-- Header Navbar -->
+    <nav class="bg-white border-b px-6 py-4 flex items-center justify-between shadow-sm">
+        <div class="flex items-center space-x-3">
+            <i class="fa-solid fa-bars text-gray-600 text-xl cursor-pointer"></i>
+            <h1 class="text-xl font-bold text-gray-700">Sadari Jafung</h1>
+        </div>
+        <div class="w-1/3 relative">
+            <input type="text" id="searchInput" onkeyup="applyAllFilters()" placeholder="Search Bezzeting Pegawai..." 
+                class="w-full pl-10 pr-4 py-2 border rounded-full bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400 text-sm"></i>
+        </div>
+        <div class="flex items-center space-x-4">
+            <button onclick="fetchBezzetingData()" class="p-2 hover:bg-gray-100 rounded-full text-gray-600" title="Refresh Data">
+                <i class="fa-solid fa-rotate-right"></i>
+            </button>
+            <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm">P</div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="p-6">
+
+        <!-- Bezzeting Table Section -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <!-- Header Card -->
+            <div class="px-6 py-5 flex justify-between items-center bg-white border-b border-gray-100">
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-list-check text-blue-600 text-lg"></i>
+                        <h2 class="text-xl font-bold text-slate-800">Bezzeting Pegawai</h2>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1 font-medium">Rekapitulasi Kebutuhan dan Formasi JF Per Instansi/OPD</p>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <button onclick="resetColumnFilters()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold px-3 py-1.5 rounded-lg border flex items-center space-x-1">
+                        <i class="fa-solid fa-filter-circle-xmark"></i>
+                        <span>Reset Filter</span>
+                    </button>
+                    <span id="loadingIndicator" class="text-xs text-blue-600 font-semibold hidden">
+                        <i class="fa-solid fa-spinner animate-spin mr-1"></i> Memuat data...
+                    </span>
+                    <span class="bg-slate-100 text-slate-600 text-xs font-semibold px-3 py-1.5 rounded-full" id="dataCountBadge">
+                        Menampilkan 0 data
+                    </span>
+                </div>
+            </div>
+
+            <!-- Tabel Bezzeting Utama -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs text-gray-600">
+                    <thead class="bg-slate-50 text-slate-600 uppercase font-bold border-b border-gray-200 tracking-wider">
+                        <tr>
+                            <th class="p-3 w-12 text-center">NO</th>
+                            <th class="p-3">NAMA OPD</th>
+                            <th class="p-3">NAMA JF</th>
+                            <th class="p-3 text-center leading-tight">JUMLAH<br>KEBUTUHAN</th>
+                            <th class="p-3 text-center leading-tight">JUMLAH<br>EXISTING</th>
+                            <th class="p-3 text-center leading-tight">FORMASI<br>TERSEDIA</th>
+                            <th class="p-3 text-center leading-tight">REKOMENDASI<br>INSTANSI PEMBINA</th>
+                            <th class="p-3 text-center leading-tight">PENETAPAN<br>MENPAN</th>
+                            <th class="p-3 text-center">AKSI</th>
+                        </tr>
+                        <!-- Baris Input Filter Disetiap Kolom -->
+                        <tr class="bg-slate-100 border-b border-gray-200 font-normal normal-case">
+                            <td class="p-2 text-center">
+                                <i class="fa-solid fa-filter text-slate-400"></i>
+                            </td>
+                            <td class="p-2">
+                                <input type="text" id="colOpd" onkeyup="applyAllFilters()" placeholder="Filter OPD..." class="w-full px-2 py-1 border rounded bg-white text-xs focus:ring-1 focus:ring-blue-400">
+                            </td>
+                            <td class="p-2">
+                                <input type="text" id="colJf" onkeyup="applyAllFilters()" placeholder="Filter JF..." class="w-full px-2 py-1 border rounded bg-white text-xs focus:ring-1 focus:ring-blue-400">
+                            </td>
+                            <td class="p-2 text-center">
+                                <input type="text" id="colKeb" onkeyup="applyAllFilters()" placeholder="Angka..." class="w-16 px-1 py-1 border rounded bg-white text-xs text-center focus:ring-1 focus:ring-blue-400 mx-auto block">
+                            </td>
+                            <td class="p-2 text-center">
+                                <input type="text" id="colExt" onkeyup="applyAllFilters()" placeholder="Angka..." class="w-16 px-1 py-1 border rounded bg-white text-xs text-center focus:ring-1 focus:ring-blue-400 mx-auto block">
+                            </td>
+                            <td class="p-2 text-center">
+                                <input type="text" id="colForm" onkeyup="applyAllFilters()" placeholder="Angka..." class="w-16 px-1 py-1 border rounded bg-white text-xs text-center focus:ring-1 focus:ring-blue-400 mx-auto block">
+                            </td>
+                            <td class="p-2 text-center">
+                                <select id="colRekom" onchange="applyAllFilters()" class="w-24 px-1 py-1 border rounded bg-white text-xs text-center focus:ring-1 focus:ring-blue-400 mx-auto block">
+                                    <option value="">Semua</option>
+                                    <option value="ada">Ada</option>
+                                    <option value="tidak">Tidak Ada</option>
+                                </select>
+                            </td>
+                            <td class="p-2 text-center">
+                                <select id="colPenetapan" onchange="applyAllFilters()" class="w-24 px-1 py-1 border rounded bg-white text-xs text-center focus:ring-1 focus:ring-blue-400 mx-auto block">
+                                    <option value="">Semua</option>
+                                    <option value="ada">Ada</option>
+                                    <option value="tidak">Tidak Ada</option>
+                                </select>
+                            </td>
+                            <td class="p-2 text-center"></td>
+                        </tr>
+                    </thead>
+                    <tbody id="bezzetingTableBody" class="divide-y divide-gray-100">
+                        <!-- Data Bezzeting diisi via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Detail Pegawai -->
+    <div id="pegawaiModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-5xl overflow-hidden flex flex-col max-h-[90vh]">
+            
+            <!-- Modal Header -->
+            <div class="px-6 py-4 bg-blue-600 text-white flex justify-between items-center">
+                <div>
+                    <h3 class="text-lg font-bold" id="modalTitle">Rincian Pegawai</h3>
+                    <p class="text-xs text-blue-100" id="modalSubTitle">OPD / Jabatan Fungsional</p>
+                </div>
+                <button onclick="closeModal()" class="text-white hover:text-gray-200 text-xl font-bold">&times;</button>
+            </div>
+
+            <!-- Toolbar Atas Modal (Fitur Search Pegawai & Informasi Jumlah) -->
+            <div class="px-6 py-3 bg-slate-50 border-b flex justify-between items-center gap-4">
+                <div class="relative w-full max-w-md">
+                    <input type="text" id="modalSearchInput" onkeyup="filterPegawaiModal()" placeholder="Cari Nama Pegawai, NIP, Golongan, Pendidikan..." 
+                        class="w-full pl-9 pr-4 py-1.5 border rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-gray-400 text-xs"></i>
+                </div>
+                <span id="modalPegawaiCount" class="text-xs font-semibold text-slate-600 bg-slate-200 px-3 py-1 rounded-full whitespace-nowrap">
+                    Total: 0 Pegawai
+                </span>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6 overflow-y-auto flex-1">
+                <div id="modalLoading" class="text-center py-8 text-gray-500">
+                    <i class="fa-solid fa-spinner animate-spin text-3xl text-blue-600 mb-2"></i>
+                    <p>Mengambil rincian data pegawai...</p>
+                </div>
+
+                <div id="modalContent" class="hidden">
+                    <table class="w-full text-left text-xs text-gray-600 border rounded-lg overflow-hidden">
+                        <thead class="bg-gray-100 uppercase font-semibold text-gray-700 border-b">
+                            <tr>
+                                <th class="p-3 border text-center w-12">NO</th>
+                                <th class="p-3 border">NAMA PEGAWAI</th>
+                                <th class="p-3 border">NIP</th>
+                                <th class="p-3 border">PANGKAT/GOL</th>
+                                <th class="p-3 border">PENDIDIKAN</th>
+                                <th class="p-3 border text-center">STATUS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pegawaiTableBody" class="divide-y divide-gray-200">
+                            <!-- Data Pegawai diisi via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="px-6 py-3 bg-gray-50 border-t flex justify-end">
+                <button onclick="closeModal()" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white text-xs font-semibold rounded-md">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Internal -->
+    <script>
+        // Ganti URL di bawah ini dengan Web App URL Google Apps Script Anda!
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwwqt0AjWv8O-BrHXSWKwG9UAfMHOOJ9_9gsgr9ecChjGdc6GS8lO0Q0WLPR0XzTXgK/exec";
+
+        let bezzetingData = [];
+        let currentPegawaiList = []; // Menyimpan data pegawai sementara untuk pencarian di modal
+
+        document.addEventListener("DOMContentLoaded", () => {
+            fetchBezzetingData();
+        });
+
+        // 1. Ambil Data Bezzeting dari API
+        async function fetchBezzetingData() {
+            const loading = document.getElementById("loadingIndicator");
+            loading.classList.remove("hidden");
+
+            try {
+                const res = await fetch(`${GOOGLE_SCRIPT_URL}?action=getBezzeting`);
+                bezzetingData = await res.json();
+                renderBezzetingTable(bezzetingData);
+            } catch (err) {
+                console.error("Gagal mengambil data bezzeting:", err);
+                alert("Gagal terhubung ke Google Sheet. Pastikan Web App URL Apps Script Anda sudah benar.");
+            } finally {
+                loading.classList.add("hidden");
+            }
+        }
+
+        // 2. Render Tabel Utama
+        function renderBezzetingTable(data) {
+            const tbody = document.getElementById("bezzetingTableBody");
+            const badgeCount = document.getElementById("dataCountBadge");
+            tbody.innerHTML = "";
+
+            badgeCount.innerText = `Menampilkan ${data.length} data`;
+
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" class="text-center p-6 text-gray-400">Data tidak ditemukan.</td></tr>`;
+                return;
+            }
+
+            data.forEach((row, index) => {
+                const tr = document.createElement("tr");
+                tr.className = "hover:bg-slate-50 transition duration-150";
+
+                const valFormasi = Number(row.formasi_tersedia) || 0;
+                let badgeClass = "bg-green-100 text-green-700 border border-green-200";
+                let displayFormasi = valFormasi > 0 ? `+${valFormasi}` : `${valFormasi}`;
+                
+                if (valFormasi < 0) {
+                    badgeClass = "bg-red-100 text-red-700 border border-red-200";
+                } else if (valFormasi === 0) {
+                    badgeClass = "bg-gray-100 text-gray-600 border border-gray-200";
+                }
+
+                const btnRekomendasi = row.rekomendasi_instansi && row.rekomendasi_instansi.trim() !== '' ? 
+                    `<a href="${row.rekomendasi_instansi}" target="_blank" 
+                        class="inline-flex items-center space-x-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 font-semibold px-3 py-1.5 rounded-full border border-blue-200 transition text-xs">
+                        <i class="fa-brands fa-google-drive text-blue-500"></i>
+                        <span>Rekomendasi</span>
+                    </a>` : '-';
+
+                const btnPenetapan = row.penetapan_menpanrb && row.penetapan_menpanrb.trim() !== '' ? 
+                    `<a href="${row.penetapan_menpanrb}" target="_blank" 
+                        class="inline-flex items-center space-x-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 font-semibold px-3 py-1.5 rounded-full border border-indigo-200 transition text-xs">
+                        <i class="fa-brands fa-google-drive text-indigo-500"></i>
+                        <span>Penetapan</span>
+                    </a>` : '-';
+
+                tr.innerHTML = `
+                    <td class="p-4 text-center font-bold text-gray-400">${row.no || (index + 1)}</td>
+                    <td class="p-4 font-bold text-slate-800 max-w-[200px] leading-snug">${row.nama_opd}</td>
+                    <td class="p-4 text-slate-700 font-medium max-w-[200px] leading-snug">${row.nama_jf}</td>
+                    <td class="p-4 text-center font-bold text-slate-800 text-sm">${row.jumlah_kebutuhan}</td>
+                    <td class="p-4 text-center font-bold text-slate-800 text-sm">${row.jumlah_existing}</td>
+                    <td class="p-4 text-center">
+                        <span class="inline-block px-3 py-1 rounded-md text-xs font-extrabold ${badgeClass}">
+                            ${displayFormasi}
+                        </span>
+                    </td>
+                    <td class="p-4 text-center">${btnRekomendasi}</td>
+                    <td class="p-4 text-center">${btnPenetapan}</td>
+                    <td class="p-4 text-center">
+                        <button onclick="openPegawaiModal('${escapeHtml(row.nama_opd)}', '${escapeHtml(row.nama_jf)}')" 
+                            class="text-slate-500 hover:text-blue-600 p-2 rounded-lg hover:bg-slate-100 transition text-base" title="Lihat Rincian Pegawai">
+                            <i class="fa-solid fa-users-gear"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // 3. Multi-Filter Utama
+        function applyAllFilters() {
+            const globalSearch = document.getElementById("searchInput").value.toLowerCase();
+            const fOpd = document.getElementById("colOpd").value.toLowerCase();
+            const fJf = document.getElementById("colJf").value.toLowerCase();
+            const fKeb = document.getElementById("colKeb").value.trim();
+            const fExt = document.getElementById("colExt").value.trim();
+            const fForm = document.getElementById("colForm").value.trim();
+            const fRekom = document.getElementById("colRekom").value;
+            const fPenetapan = document.getElementById("colPenetapan").value;
+
+            const filtered = bezzetingData.filter(d => {
+                const matchGlobal = !globalSearch || 
+                    (d.nama_opd && d.nama_opd.toLowerCase().includes(globalSearch)) ||
+                    (d.nama_jf && d.nama_jf.toLowerCase().includes(globalSearch));
+
+                const matchOpd = !fOpd || (d.nama_opd && d.nama_opd.toLowerCase().includes(fOpd));
+                const matchJf = !fJf || (d.nama_jf && d.nama_jf.toLowerCase().includes(fJf));
+                const matchKeb = !fKeb || String(d.jumlah_kebutuhan) === fKeb;
+                const matchExt = !fExt || String(d.jumlah_existing) === fExt;
+                const matchForm = !fForm || String(d.formasi_tersedia) === fForm;
+
+                const hasRekom = d.rekomendasi_instansi && d.rekomendasi_instansi.trim() !== '';
+                const matchRekom = !fRekom || (fRekom === 'ada' ? hasRekom : !hasRekom);
+
+                const hasPenetapan = d.penetapan_menpanrb && d.penetapan_menpanrb.trim() !== '';
+                const matchPenetapan = !fPenetapan || (fPenetapan === 'ada' ? hasPenetapan : !hasPenetapan);
+
+                return matchGlobal && matchOpd && matchJf && matchKeb && matchExt && matchForm && matchRekom && matchPenetapan;
+            });
+
+            renderBezzetingTable(filtered);
+        }
+
+        // 4. Reset Filter Header
+        function resetColumnFilters() {
+            document.getElementById("searchInput").value = "";
+            document.getElementById("colOpd").value = "";
+            document.getElementById("colJf").value = "";
+            document.getElementById("colKeb").value = "";
+            document.getElementById("colExt").value = "";
+            document.getElementById("colForm").value = "";
+            document.getElementById("colRekom").value = "";
+            document.getElementById("colPenetapan").value = "";
+            renderBezzetingTable(bezzetingData);
+        }
+
+        // 5. Pop-up Rincian Pegawai (Drill-down)
+        async function openPegawaiModal(opd, jf) {
+            const modal = document.getElementById("pegawaiModal");
+            const modalLoading = document.getElementById("modalLoading");
+            const modalContent = document.getElementById("modalContent");
+            const searchInput = document.getElementById("modalSearchInput");
+
+            // Reset input pencarian modal
+            searchInput.value = "";
+
+            const isGuru = jf.toLowerCase().includes("guru");
+            document.getElementById("modalTitle").innerText = `Rincian Pegawai: ${jf}`;
+            document.getElementById("modalSubTitle").innerText = isGuru 
+                ? "Lintas Unit Kerja / Seluruh Sekolah (Khusus Jabatan Guru)" 
+                : opd;
+
+            modal.classList.remove("hidden");
+            modalLoading.classList.remove("hidden");
+            modalContent.classList.add("hidden");
+
+            try {
+                const res = await fetch(`${GOOGLE_SCRIPT_URL}?action=getPegawai&opd=${encodeURIComponent(opd)}&jf=${encodeURIComponent(jf)}`);
+                currentPegawaiList = await res.json(); // Simpan ke variabel global sementara
+
+                modalLoading.classList.add("hidden");
+                modalContent.classList.remove("hidden");
+
+                renderPegawaiTable(currentPegawaiList);
+
+            } catch (err) {
+                console.error("Gagal mengambil rincian pegawai:", err);
+                modalLoading.innerHTML = `<p class="text-red-500">Gagal memuat data pegawai.</p>`;
+            }
+        }
+
+        // 6. Render Tabel Pegawai di Dalam Modal
+        function renderPegawaiTable(pegawaiList) {
+            const tbody = document.getElementById("pegawaiTableBody");
+            const countBadge = document.getElementById("modalPegawaiCount");
+            tbody.innerHTML = "";
+
+            countBadge.innerText = `Total: ${pegawaiList.length} Pegawai`;
+
+            if (pegawaiList.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center p-6 text-gray-400">Tidak ada data pegawai yang sesuai.</td></tr>`;
+                return;
+            }
+
+            pegawaiList.forEach((p, idx) => {
+                const tr = document.createElement("tr");
+                tr.className = "hover:bg-gray-50 transition";
+                tr.innerHTML = `
+                    <td class="p-3 border text-center font-medium">${idx + 1}</td>
+                    <td class="p-3 border font-semibold text-gray-700">${p.nama}</td>
+                    <td class="p-3 border font-mono text-xs">${p.nip || '-'}</td>
+                    <td class="p-3 border">${p.pangkat_gol || '-'}</td>
+                    <td class="p-3 border">${p.pendidikan || '-'}</td>
+                    <td class="p-3 border text-center">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold ${p.status === 'PNS' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}">
+                            ${p.status || 'PNS'}
+                        </span>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // 7. Fitur Pencarian Real-time Khusus Modal Pegawai
+        function filterPegawaiModal() {
+            const query = document.getElementById("modalSearchInput").value.toLowerCase();
+            const filtered = currentPegawaiList.filter(p => 
+                (p.nama && p.nama.toLowerCase().includes(query)) ||
+                (p.nip && p.nip.toLowerCase().includes(query)) ||
+                (p.pangkat_gol && p.pangkat_gol.toLowerCase().includes(query)) ||
+                (p.pendidikan && p.pendidikan.toLowerCase().includes(query)) ||
+                (p.status && p.status.toLowerCase().includes(query))
+            );
+            renderPegawaiTable(filtered);
+        }
+
+        function closeModal() {
+            document.getElementById("pegawaiModal").classList.add("hidden");
+        }
+
+        function escapeHtml(text) {
+            return (text || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        }
+    </script>
+</body>
+</html>
